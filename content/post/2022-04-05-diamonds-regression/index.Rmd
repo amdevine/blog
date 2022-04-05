@@ -1,0 +1,80 @@
+---
+title: 'Day 2: Regress to Impress'
+author: Amanda Devine
+date: '2022-04-05'
+slug: diamonds-regression
+categories:
+  - ''
+tags:
+  - 100doda
+  - diamonds
+  - R
+  - linear regression
+description: ''
+thumbnail: ''
+---
+
+```{r}
+library(ggplot2)
+```
+
+
+In order to properly fit a linear regression model, there are certain assumptions about the dataset that need to be met:
+- the observations are independent and identically distributed (i.i.d.)
+- the data are heteroscedastic (variance is the same throughout the set)
+- the predictors and response are linearly related
+- the errors are normally distributed
+
+These assumptions can be checked by taking a look at the data:
+
+```{r}
+plot(diamonds$carat, diamonds$price)
+```
+
+It looks as though there is some heteroscedasticity 
+
+
+# Fitting a linear regression model
+
+In order to check our assumptions, we can fit an initial linear regression model and check the residuals.
+
+```{r}
+model1 <- lm(price ~ carat + cut + color + clarity, data = diamonds)
+summary(model1)
+```
+
+```{r}
+d1 <- data.frame(carat = 4, color = 'D', clarity = 'IF', cut = 'Ideal')
+d1
+```
+
+```{r}
+predict(model1, d1, interval = 'prediction')
+```
+
+
+```{r}
+d2 <- data.frame(carat = 1.75, color = 'D', clarity = 'IF', cut = 'Ideal')
+predict(model1, d2, interval = 'prediction')
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(model1)
+```
+
+```{r}
+diamonds$log_price <- log(diamonds$price)
+head(diamonds)
+```
+
+```{r}
+model2 <- lm(log_price ~ carat + cut + color + clarity, data = diamonds)
+summary(model2)
+```
+
+```{r}
+par(mfrow = c(2, 2))
+plot(model2)
+```
+

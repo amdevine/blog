@@ -1,0 +1,136 @@
+---
+title: 'Day 2: Regress to Impress'
+author: Amanda Devine
+date: '2022-04-05'
+slug: diamonds-regression
+categories:
+  - ''
+tags:
+  - 100doda
+  - diamonds
+  - R
+  - linear regression
+description: ''
+thumbnail: ''
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<pre class="r"><code>library(ggplot2)</code></pre>
+<pre><code>## Warning: package &#39;ggplot2&#39; was built under R version 4.0.5</code></pre>
+<p>In order to properly fit a linear regression model, there are certain assumptions about the dataset that need to be met:
+- the observations are independent and identically distributed (i.i.d.)
+- the data are heteroscedastic (variance is the same throughout the set)
+- the predictors and response are linearly related
+- the errors are normally distributed</p>
+<p>These assumptions can be checked by taking a look at the data:</p>
+<pre class="r"><code>plot(diamonds$carat, diamonds$price)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-2-1.png" width="672" /></p>
+<p>It looks as though there is some heteroscedasticity</p>
+<div id="fitting-a-linear-regression-model" class="section level1">
+<h1>Fitting a linear regression model</h1>
+<p>In order to check our assumptions, we can fit an initial linear regression model and check the residuals.</p>
+<pre class="r"><code>model1 &lt;- lm(price ~ carat + cut + color + clarity, data = diamonds)
+summary(model1)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = price ~ carat + cut + color + clarity, data = diamonds)
+## 
+## Residuals:
+##      Min       1Q   Median       3Q      Max 
+## -16813.5   -680.4   -197.6    466.4  10394.9 
+## 
+## Coefficients:
+##              Estimate Std. Error  t value Pr(&gt;|t|)    
+## (Intercept) -3710.603     13.980 -265.414  &lt; 2e-16 ***
+## carat        8886.129     12.034  738.437  &lt; 2e-16 ***
+## cut.L         698.907     20.335   34.369  &lt; 2e-16 ***
+## cut.Q        -327.686     17.911  -18.295  &lt; 2e-16 ***
+## cut.C         180.565     15.557   11.607  &lt; 2e-16 ***
+## cut^4          -1.207     12.458   -0.097    0.923    
+## color.L     -1910.288     17.712 -107.853  &lt; 2e-16 ***
+## color.Q      -627.954     16.121  -38.952  &lt; 2e-16 ***
+## color.C      -171.960     15.070  -11.410  &lt; 2e-16 ***
+## color^4        21.678     13.840    1.566    0.117    
+## color^5       -85.943     13.076   -6.572 5.00e-11 ***
+## color^6       -49.986     11.889   -4.205 2.62e-05 ***
+## clarity.L    4217.535     30.831  136.794  &lt; 2e-16 ***
+## clarity.Q   -1832.406     28.827  -63.565  &lt; 2e-16 ***
+## clarity.C     923.273     24.679   37.411  &lt; 2e-16 ***
+## clarity^4    -361.995     19.739  -18.339  &lt; 2e-16 ***
+## clarity^5     216.616     16.109   13.447  &lt; 2e-16 ***
+## clarity^6       2.105     14.037    0.150    0.881    
+## clarity^7     110.340     12.383    8.910  &lt; 2e-16 ***
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 1157 on 53921 degrees of freedom
+## Multiple R-squared:  0.9159, Adjusted R-squared:  0.9159 
+## F-statistic: 3.264e+04 on 18 and 53921 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>d1 &lt;- data.frame(carat = 4, color = &#39;D&#39;, clarity = &#39;IF&#39;, cut = &#39;Ideal&#39;)
+d1</code></pre>
+<pre><code>##   carat color clarity   cut
+## 1     4     D      IF Ideal</code></pre>
+<pre class="r"><code>predict(model1, d1, interval = &#39;prediction&#39;)</code></pre>
+<pre><code>##        fit      lwr      upr
+## 1 34599.61 32329.67 36869.56</code></pre>
+<pre class="r"><code>d2 &lt;- data.frame(carat = 1.75, color = &#39;D&#39;, clarity = &#39;IF&#39;, cut = &#39;Ideal&#39;)
+predict(model1, d2, interval = &#39;prediction&#39;)</code></pre>
+<pre><code>##        fit     lwr      upr
+## 1 14605.82 12337.3 16874.35</code></pre>
+<pre class="r"><code>par(mfrow = c(2, 2))
+plot(model1)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<pre class="r"><code>diamonds$log_price &lt;- log(diamonds$price)
+head(diamonds)</code></pre>
+<pre><code>## # A tibble: 6 x 11
+##   carat cut       color clarity depth table price     x     y     z log_price
+##   &lt;dbl&gt; &lt;ord&gt;     &lt;ord&gt; &lt;ord&gt;   &lt;dbl&gt; &lt;dbl&gt; &lt;int&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt;     &lt;dbl&gt;
+## 1  0.23 Ideal     E     SI2      61.5    55   326  3.95  3.98  2.43      5.79
+## 2  0.21 Premium   E     SI1      59.8    61   326  3.89  3.84  2.31      5.79
+## 3  0.23 Good      E     VS1      56.9    65   327  4.05  4.07  2.31      5.79
+## 4  0.29 Premium   I     VS2      62.4    58   334  4.2   4.23  2.63      5.81
+## 5  0.31 Good      J     SI2      63.3    58   335  4.34  4.35  2.75      5.81
+## 6  0.24 Very Good J     VVS2     62.8    57   336  3.94  3.96  2.48      5.82</code></pre>
+<pre class="r"><code>model2 &lt;- lm(log_price ~ carat + cut + color + clarity, data = diamonds)
+summary(model2)</code></pre>
+<pre><code>## 
+## Call:
+## lm(formula = log_price ~ carat + cut + color + clarity, data = diamonds)
+## 
+## Residuals:
+##     Min      1Q  Median      3Q     Max 
+## -5.9828 -0.2183  0.0576  0.2485  1.6301 
+## 
+## Coefficients:
+##               Estimate Std. Error  t value Pr(&gt;|t|)    
+## (Intercept)  5.9227456  0.0040955 1446.142  &lt; 2e-16 ***
+## carat        2.1974591  0.0035253  623.348  &lt; 2e-16 ***
+## cut.L        0.0552607  0.0059571    9.276  &lt; 2e-16 ***
+## cut.Q       -0.0151744  0.0052469   -2.892  0.00383 ** 
+## cut.C        0.0225108  0.0045573    4.940 7.85e-07 ***
+## cut^4        0.0009450  0.0036496    0.259  0.79568    
+## color.L     -0.5056829  0.0051887  -97.459  &lt; 2e-16 ***
+## color.Q     -0.1576930  0.0047226  -33.391  &lt; 2e-16 ***
+## color.C     -0.0034591  0.0044148   -0.784  0.43333    
+## color^4      0.0395349  0.0040544    9.751  &lt; 2e-16 ***
+## color^5     -0.0192071  0.0038307   -5.014 5.35e-07 ***
+## color^6      0.0041965  0.0034828    1.205  0.22823    
+## clarity.L    0.7610924  0.0090320   84.266  &lt; 2e-16 ***
+## clarity.Q   -0.3715090  0.0084449  -43.992  &lt; 2e-16 ***
+## clarity.C    0.2181347  0.0072298   30.172  &lt; 2e-16 ***
+## clarity^4   -0.0708059  0.0057825  -12.245  &lt; 2e-16 ***
+## clarity^5    0.0522089  0.0047192   11.063  &lt; 2e-16 ***
+## clarity^6    0.0005195  0.0041121    0.126  0.89947    
+## clarity^7    0.0058041  0.0036277    1.600  0.10962    
+## ---
+## Signif. codes:  0 &#39;***&#39; 0.001 &#39;**&#39; 0.01 &#39;*&#39; 0.05 &#39;.&#39; 0.1 &#39; &#39; 1
+## 
+## Residual standard error: 0.3389 on 53921 degrees of freedom
+## Multiple R-squared:  0.8885, Adjusted R-squared:  0.8884 
+## F-statistic: 2.387e+04 on 18 and 53921 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>par(mfrow = c(2, 2))
+plot(model2)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-10-1.png" width="672" /></p>
+</div>

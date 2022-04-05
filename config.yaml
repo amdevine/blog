@@ -1,0 +1,47 @@
+baseurl: /
+title: Amanda Devine
+languageCode: en-us
+paginate: '10'
+theme: Mainroad
+disqusShortname: ''
+googleAnalytics: ''
+
+Author:
+  avatar: img/headshot_square.png
+  bio: Amanda Devine is a data analyst and graduate student based in the Washington DC area.
+  name: Amanda
+
+Params:
+  authorbox: yes
+  description: Amanda Devine
+  logo:
+    subtitle: A blog about exploring data
+    image: 
+  mainSections:
+    - post
+    - docs
+  opengraph: yes
+  pager: yes
+  post_meta:
+    - author
+    - date
+  readmore: yes
+  sidebar:
+    home: left
+    list: left
+    single: left
+    widgets:
+      - search
+      - recent
+      - categories
+      - taglist
+  twitter_cards: no
+  widgets:
+    recent_num: 5
+    tags_counter: no
+
+# Plot ggplot figures
+markup:
+  goldmark:
+    renderer:
+      unsafe: true

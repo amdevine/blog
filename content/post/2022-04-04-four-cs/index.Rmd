@@ -1,0 +1,147 @@
+---
+title: 'Day 1: The Four Cs'
+author: "Amanda Devine"
+date: '2022-04-04'
+slug: four-cs
+categories: ''
+tags:
+- 100doda
+- ggplot
+- diamonds
+- R
+description: ''
+thumbnail: ''
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set()
+```
+
+I'm going to start off my 100 Days of Data Analytics challenge lavishly and luxuriously by doing some analysis on the [diamonds prices](https://ggplot2.tidyverse.org/reference/diamonds.html) data set that comes packaged with ggplot. I hope that ultimately I can fit a linear regression model modeling how the 4Cs (carat, color, cut, and clarity) affect the sale price of a diamond.
+
+For Day 1, I want to start simply by taking a look visually at the individual Cs and how they are related to diamond price! 
+
+<!--more-->
+
+# Introduction
+
+My (now) husband and I got engaged in October 2020 after dating for a very long time. I'm not a fan of surprises, so our engagement was something we planned together, including the location (the West Virginia wilderness), the time (the fall is the best time to be in WV!) and the rings. In the process of shopping around for rings, I fell down a rabbit hole of engagement ring details - different stones, cuts, metals, band decoration, sellers, etc. Anyone who has ever had to shop for an engagement ring knows that there are an overwhelming number of details to consider, and some things that seem inconsequential can have an enormous effect on the overall price! 
+
+# The Data
+
+First, we load the required R packages. We will use `ggplot2` for the data set itself and the visualization. `cowplot` provides some simple default formatting that I like for plots. `glue` and `kable` are useful packages for printing formatted strings and HTML tables respectively.
+
+```{r, warning=FALSE, message=FALSE}
+library(ggplot2)
+library(cowplot)
+library(knitr)
+library(glue)
+```
+
+Next, we can take a look at the data set. Here we can see the raw data:
+
+```{r}
+kable(head(diamonds, 10), 'html')
+```
+We can also take a look at the data types of the individual columns:
+
+```{r}
+str(diamonds)
+```
+
+We can see that the data consists of 53,940 individual diamonds. For each diamond, we are provided the following fields:
+
+- **Carat**: the mass of the diamond
+
+- **Cut**: the quality of the faceting, which can impact the overall sparkle, brilliance, and fire of a diamond. Cut is provided as an ordinal variable with the values Fair (the lowest quality), Good, Very Good, Premium, and Ideal (the highest quality)
+
+- **Color**: the color of the diamond. Color is provided an ordinal variable with the values D (the most colorless), E, F, G, H, I, and J (the most colorful). Note that this ordering is **reversed** - in diamond grading, the lower the letter, the higher quality the diamond.
+
+- **Clarity**: the number of natural imperfections present in the diamond. Clarity is provided as an ordinal variable with the values I1 (the most flawed), SI2, SI1, VS2, VS1, VVS2, VVS1, and IF (the most flawless)
+
+- **Price**: the sale price in USD for the diamond
+
+We are also provided the numerical values `depth`, `table`, `x`, `y`, and `z`, which describe the geometry of the diamond. In a future analysis, it might be interesting to see if these values could be used to model the cut value of the diamond, because the quality of the cut is often determined by visual appearance of the diamond, which is in turn determined by the geometric shape. For today, however, we are going to focus on the 4Cs!
+
+# Carat
+
+Let's start by plotting carat versus price.
+
+```{r carat_plot}
+ggplot(diamonds, aes(carat, price)) + 
+    geom_point(color = '#3182bd', alpha = 0.2) + 
+    scale_x_continuous(breaks = seq(0, 5.5, by = 0.5)) +
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    labs(x = 'Carats', y = 'Price ($)') +
+    theme_cowplot()
+```
+
+There is a very clear positive relationship between the carat size of a diamond and its price. This is completely unsurprising - anecdotally, the one detail anyone wants to know about a diamond ring is how many carats it is. 
+
+There are some really interesting clusters of points at major size intervals, particularly visible at 0.75, 1.0, 1.25, 1.5, 1.75, and 2.0. It seems that people have a strong preference for "milestone" carat sizes, and it seems that jewelers are accommodating these preferences. 
+
+These clusters are interesting from a data perspective. In an ideal world, I would imagine that a lapidary would cut a raw stone in a manner to maximize the overall faceted weight. (I can't imagine that someone would whittle down a 1.2 carat diamond to 1.0 carats just for the sake of a round number!) Then, I would imagine that the company would advertise the weight accurately for the consumer, so the customer can make an informed decision on the stone they are purchasing. So why do we see clustering of diamonds at particularly rounded weights?
+- Are diamond sellers exaggerating stone weights?
+- When the data were collected, were they collected from individuals who reported the stats inaccurately?
+- Is my assumption incorrect, and lapidaries do shave down larger diamonds so their carat weights are more rounded??
+
+Also from a data perspective, the carat vs price data are strongly heteroscedastic, which (spoiler alert) is evident when fitted to a linear model. This is something that we will have to deal with when we start to work on our linear regression model.
+
+
+# Cut
+
+```{r cut_plot}
+ggplot(diamonds, aes(cut, price)) + 
+    geom_jitter(color = '#bbbbbb', alpha = 0.2) +
+    geom_boxplot(aes(fill = cut)) + 
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    scale_fill_brewer(name = 'Cut', palette = 'Blues') +
+    labs(x = 'Cut', y = 'Price ($)') +
+    theme_cowplot()
+```
+
+One phrase you will encounter when diamond shopping is "cut is king." It is accepted wisdom that the better a cut, the more brilliance (sparkle) and fire (rainbow flashes) the diamond will exhibit, leading to an overall more eye-catching and beautiful stone. We would expect, therefore, to see a positive relationship between the cut of the stone and the overall price, but that doesn't seem to be apparent in this dataset. Instead, price seems to be pretty consistent across all cuts, with maybe a slightly higher value for Premium cut diamonds above the others.
+
+```{r}
+cut_model <- aov(price ~ cut, data = diamonds)
+TukeyHSD(cut_model)
+```
+
+
+# Color
+
+```{r color_plot}
+ggplot(diamonds, aes(color, price)) + 
+    geom_jitter(color = '#bbbbbb', alpha = 0.2) +
+    geom_boxplot(aes(fill = color)) + 
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    scale_fill_brewer(name = 'Color', palette = 'Blues') +
+    labs(x = 'Color', y = 'Price ($)') +
+    theme_cowplot()
+```
+
+These results are surprising. In general, the more colorless a diamond, the higher quality it is considered. I would have expected to see the median values trending in the opposite direction, where D color stones are highest and J are lowest. I suspect that color alone may not be the driving factor in diamond price; I would guess that some other factors (namely, caret and cut) are more highly prioritized, so perhaps people are willing to compromise on color if it means that they can get a larger stone with a better cut.
+
+# Clarity
+
+```{r clarity_plot}
+ggplot(diamonds, aes(clarity, price)) + 
+    geom_jitter(color = '#bbbbbb', alpha = 0.2) +
+    geom_boxplot(aes(fill = clarity)) + 
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    scale_fill_brewer(name = 'Clarity', palette = 'Blues') +
+    labs(x = 'Clarity', y = 'Price ($)') +
+    theme_cowplot()
+```
+
+```{r}
+boxplot(price~clarity, data = diamonds)
+```
+
+
+Again, these results are contrary to what we would expect. All else being equal, we would expect a stone that is internally flawless (IF) to be sold for much more than one that contains visible flaws (I1 or SI2). However, as with color, perhaps this is something that buyers are willing to compromise on for the sake of other factors (i.e. carat and cut).
+
+
+
+
+

@@ -1,0 +1,490 @@
+---
+title: 'Day 1: The Four Cs'
+author: "Amanda Devine"
+date: '2022-04-04'
+# slug: four-cs
+categories: ''
+tags:
+- 100doda
+- ggplot
+- diamonds
+- R
+description: ''
+thumbnail: ''
+---
+
+<script src="{{< blogdown/postref >}}index_files/header-attrs/header-attrs.js"></script>
+
+
+<p>I’m going to start off my 100 Days of Data Analytics challenge lavishly and luxuriously by doing some analysis on the <a href="https://ggplot2.tidyverse.org/reference/diamonds.html">diamonds prices</a> data set that comes packaged with ggplot. I hope that ultimately I can fit a linear regression model modeling how the 4Cs (carat, color, cut, and clarity) affect the sale price of a diamond.</p>
+<p>For Day 1, I want to start simply by taking a look visually at the individual Cs and how they are related to diamond price!</p>
+<!--more-->
+<div id="introduction" class="section level1">
+<h1>Introduction</h1>
+<p>My (now) husband and I got engaged in October 2020 after dating for a very long time. I’m not a fan of surprises, so our engagement was something we planned together, including the location (the West Virginia wilderness), the time (the fall is the best time to be in WV!) and the rings. In the process of shopping around for rings, I fell down a rabbit hole of engagement ring details - different stones, cuts, metals, band decoration, sellers, etc. Anyone who has ever had to shop for an engagement ring knows that there are an overwhelming number of details to consider, and some things that seem inconsequential can have an enormous effect on the overall price!</p>
+</div>
+<div id="the-data" class="section level1">
+<h1>The Data</h1>
+<p>First, we load the required R packages. We will use <code>ggplot2</code> for the data set itself and the visualization. <code>cowplot</code> provides some simple default formatting that I like for plots. <code>glue</code> and <code>kable</code> are useful packages for printing formatted strings and HTML tables respectively.</p>
+<pre class="r"><code>library(ggplot2)
+library(cowplot)
+library(knitr)
+library(glue)</code></pre>
+<p>Next, we can take a look at the data set. Here we can see the raw data:</p>
+<pre class="r"><code>kable(head(diamonds, 10), &#39;html&#39;)</code></pre>
+<table>
+<thead>
+<tr>
+<th style="text-align:right;">
+carat
+</th>
+<th style="text-align:left;">
+cut
+</th>
+<th style="text-align:left;">
+color
+</th>
+<th style="text-align:left;">
+clarity
+</th>
+<th style="text-align:right;">
+depth
+</th>
+<th style="text-align:right;">
+table
+</th>
+<th style="text-align:right;">
+price
+</th>
+<th style="text-align:right;">
+x
+</th>
+<th style="text-align:right;">
+y
+</th>
+<th style="text-align:right;">
+z
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:left;">
+Ideal
+</td>
+<td style="text-align:left;">
+E
+</td>
+<td style="text-align:left;">
+SI2
+</td>
+<td style="text-align:right;">
+61.5
+</td>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:right;">
+326
+</td>
+<td style="text-align:right;">
+3.95
+</td>
+<td style="text-align:right;">
+3.98
+</td>
+<td style="text-align:right;">
+2.43
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.21
+</td>
+<td style="text-align:left;">
+Premium
+</td>
+<td style="text-align:left;">
+E
+</td>
+<td style="text-align:left;">
+SI1
+</td>
+<td style="text-align:right;">
+59.8
+</td>
+<td style="text-align:right;">
+61
+</td>
+<td style="text-align:right;">
+326
+</td>
+<td style="text-align:right;">
+3.89
+</td>
+<td style="text-align:right;">
+3.84
+</td>
+<td style="text-align:right;">
+2.31
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:left;">
+Good
+</td>
+<td style="text-align:left;">
+E
+</td>
+<td style="text-align:left;">
+VS1
+</td>
+<td style="text-align:right;">
+56.9
+</td>
+<td style="text-align:right;">
+65
+</td>
+<td style="text-align:right;">
+327
+</td>
+<td style="text-align:right;">
+4.05
+</td>
+<td style="text-align:right;">
+4.07
+</td>
+<td style="text-align:right;">
+2.31
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.29
+</td>
+<td style="text-align:left;">
+Premium
+</td>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:left;">
+VS2
+</td>
+<td style="text-align:right;">
+62.4
+</td>
+<td style="text-align:right;">
+58
+</td>
+<td style="text-align:right;">
+334
+</td>
+<td style="text-align:right;">
+4.20
+</td>
+<td style="text-align:right;">
+4.23
+</td>
+<td style="text-align:right;">
+2.63
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.31
+</td>
+<td style="text-align:left;">
+Good
+</td>
+<td style="text-align:left;">
+J
+</td>
+<td style="text-align:left;">
+SI2
+</td>
+<td style="text-align:right;">
+63.3
+</td>
+<td style="text-align:right;">
+58
+</td>
+<td style="text-align:right;">
+335
+</td>
+<td style="text-align:right;">
+4.34
+</td>
+<td style="text-align:right;">
+4.35
+</td>
+<td style="text-align:right;">
+2.75
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:left;">
+Very Good
+</td>
+<td style="text-align:left;">
+J
+</td>
+<td style="text-align:left;">
+VVS2
+</td>
+<td style="text-align:right;">
+62.8
+</td>
+<td style="text-align:right;">
+57
+</td>
+<td style="text-align:right;">
+336
+</td>
+<td style="text-align:right;">
+3.94
+</td>
+<td style="text-align:right;">
+3.96
+</td>
+<td style="text-align:right;">
+2.48
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.24
+</td>
+<td style="text-align:left;">
+Very Good
+</td>
+<td style="text-align:left;">
+I
+</td>
+<td style="text-align:left;">
+VVS1
+</td>
+<td style="text-align:right;">
+62.3
+</td>
+<td style="text-align:right;">
+57
+</td>
+<td style="text-align:right;">
+336
+</td>
+<td style="text-align:right;">
+3.95
+</td>
+<td style="text-align:right;">
+3.98
+</td>
+<td style="text-align:right;">
+2.47
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.26
+</td>
+<td style="text-align:left;">
+Very Good
+</td>
+<td style="text-align:left;">
+H
+</td>
+<td style="text-align:left;">
+SI1
+</td>
+<td style="text-align:right;">
+61.9
+</td>
+<td style="text-align:right;">
+55
+</td>
+<td style="text-align:right;">
+337
+</td>
+<td style="text-align:right;">
+4.07
+</td>
+<td style="text-align:right;">
+4.11
+</td>
+<td style="text-align:right;">
+2.53
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.22
+</td>
+<td style="text-align:left;">
+Fair
+</td>
+<td style="text-align:left;">
+E
+</td>
+<td style="text-align:left;">
+VS2
+</td>
+<td style="text-align:right;">
+65.1
+</td>
+<td style="text-align:right;">
+61
+</td>
+<td style="text-align:right;">
+337
+</td>
+<td style="text-align:right;">
+3.87
+</td>
+<td style="text-align:right;">
+3.78
+</td>
+<td style="text-align:right;">
+2.49
+</td>
+</tr>
+<tr>
+<td style="text-align:right;">
+0.23
+</td>
+<td style="text-align:left;">
+Very Good
+</td>
+<td style="text-align:left;">
+H
+</td>
+<td style="text-align:left;">
+VS1
+</td>
+<td style="text-align:right;">
+59.4
+</td>
+<td style="text-align:right;">
+61
+</td>
+<td style="text-align:right;">
+338
+</td>
+<td style="text-align:right;">
+4.00
+</td>
+<td style="text-align:right;">
+4.05
+</td>
+<td style="text-align:right;">
+2.39
+</td>
+</tr>
+</tbody>
+</table>
+<p>We can also take a look at the data types of the individual columns:</p>
+<pre class="r"><code>str(diamonds)</code></pre>
+<pre><code>## tibble [53,940 x 10] (S3: tbl_df/tbl/data.frame)
+##  $ carat  : num [1:53940] 0.23 0.21 0.23 0.29 0.31 0.24 0.24 0.26 0.22 0.23 ...
+##  $ cut    : Ord.factor w/ 5 levels &quot;Fair&quot;&lt;&quot;Good&quot;&lt;..: 5 4 2 4 2 3 3 3 1 3 ...
+##  $ color  : Ord.factor w/ 7 levels &quot;D&quot;&lt;&quot;E&quot;&lt;&quot;F&quot;&lt;&quot;G&quot;&lt;..: 2 2 2 6 7 7 6 5 2 5 ...
+##  $ clarity: Ord.factor w/ 8 levels &quot;I1&quot;&lt;&quot;SI2&quot;&lt;&quot;SI1&quot;&lt;..: 2 3 5 4 2 6 7 3 4 5 ...
+##  $ depth  : num [1:53940] 61.5 59.8 56.9 62.4 63.3 62.8 62.3 61.9 65.1 59.4 ...
+##  $ table  : num [1:53940] 55 61 65 58 58 57 57 55 61 61 ...
+##  $ price  : int [1:53940] 326 326 327 334 335 336 336 337 337 338 ...
+##  $ x      : num [1:53940] 3.95 3.89 4.05 4.2 4.34 3.94 3.95 4.07 3.87 4 ...
+##  $ y      : num [1:53940] 3.98 3.84 4.07 4.23 4.35 3.96 3.98 4.11 3.78 4.05 ...
+##  $ z      : num [1:53940] 2.43 2.31 2.31 2.63 2.75 2.48 2.47 2.53 2.49 2.39 ...</code></pre>
+<p>We can see that the data consists of 53,940 individual diamonds. For each diamond, we are provided the following fields:</p>
+<ul>
+<li><p><strong>Carat</strong>: the mass of the diamond</p></li>
+<li><p><strong>Cut</strong>: the quality of the faceting, which can impact the overall sparkle, brilliance, and fire of a diamond. Cut is provided as an ordinal variable with the values Fair (the lowest quality), Good, Very Good, Premium, and Ideal (the highest quality)</p></li>
+<li><p><strong>Color</strong>: the color of the diamond. Color is provided an ordinal variable with the values D (the most colorless), E, F, G, H, I, and J (the most colorful). Note that this ordering is <strong>reversed</strong> - in diamond grading, the lower the letter, the higher quality the diamond.</p></li>
+<li><p><strong>Clarity</strong>: the number of natural imperfections present in the diamond. Clarity is provided as an ordinal variable with the values I1 (the most flawed), SI2, SI1, VS2, VS1, VVS2, VVS1, and IF (the most flawless)</p></li>
+<li><p><strong>Price</strong>: the sale price in USD for the diamond</p></li>
+</ul>
+<p>We are also provided the numerical values <code>depth</code>, <code>table</code>, <code>x</code>, <code>y</code>, and <code>z</code>, which describe the geometry of the diamond. In a future analysis, it might be interesting to see if these values could be used to model the cut value of the diamond, because the quality of the cut is often determined by visual appearance of the diamond, which is in turn determined by the geometric shape. For today, however, we are going to focus on the 4Cs!</p>
+</div>
+<div id="carat" class="section level1">
+<h1>Carat</h1>
+<p>Let’s start by plotting carat versus price.</p>
+<pre class="r"><code>ggplot(diamonds, aes(carat, price)) + 
+    geom_point(color = &#39;#3182bd&#39;, alpha = 0.2) + 
+    scale_x_continuous(breaks = seq(0, 5.5, by = 0.5)) +
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    labs(x = &#39;Carats&#39;, y = &#39;Price ($)&#39;) +
+    theme_cowplot()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/carat_plot-1.png" width="672" /></p>
+<p>There is a very clear positive relationship between the carat size of a diamond and its price. This is completely unsurprising - anecdotally, the one detail anyone wants to know about a diamond ring is how many carats it is.</p>
+<p>There are some really interesting clusters of points at major size intervals, particularly visible at 0.75, 1.0, 1.25, 1.5, 1.75, and 2.0. It seems that people have a strong preference for “milestone” carat sizes, and it seems that jewelers are accommodating these preferences.</p>
+<p>These clusters are interesting from a data perspective. In an ideal world, I would imagine that a lapidary would cut a raw stone in a manner to maximize the overall faceted weight. (I can’t imagine that someone would whittle down a 1.2 carat diamond to 1.0 carats just for the sake of a round number!) Then, I would imagine that the company would advertise the weight accurately for the consumer, so the customer can make an informed decision on the stone they are purchasing. So why do we see clustering of diamonds at particularly rounded weights?
+- Are diamond sellers exaggerating stone weights?
+- When the data were collected, were they collected from individuals who reported the stats inaccurately?
+- Is my assumption incorrect, and lapidaries do shave down larger diamonds so their carat weights are more rounded??</p>
+<p>Also from a data perspective, the carat vs price data are strongly heteroscedastic, which (spoiler alert) is evident when fitted to a linear model. This is something that we will have to deal with when we start to work on our linear regression model.</p>
+</div>
+<div id="cut" class="section level1">
+<h1>Cut</h1>
+<pre class="r"><code>ggplot(diamonds, aes(cut, price)) + 
+    geom_jitter(color = &#39;#bbbbbb&#39;, alpha = 0.2) +
+    geom_boxplot(aes(fill = cut)) + 
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    scale_fill_brewer(name = &#39;Cut&#39;, palette = &#39;Blues&#39;) +
+    labs(x = &#39;Cut&#39;, y = &#39;Price ($)&#39;) +
+    theme_cowplot()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/cut_plot-1.png" width="672" /></p>
+<p>One phrase you will encounter when diamond shopping is “cut is king.” It is accepted wisdom that the better a cut, the more brilliance (sparkle) and fire (rainbow flashes) the diamond will exhibit, leading to an overall more eye-catching and beautiful stone. We would expect, therefore, to see a positive relationship between the cut of the stone and the overall price, but that doesn’t seem to be apparent in this dataset. Instead, price seems to be pretty consistent across all cuts, with maybe a slightly higher value for Premium cut diamonds above the others.</p>
+<pre class="r"><code>cut_model &lt;- aov(price ~ cut, data = diamonds)
+TukeyHSD(cut_model)</code></pre>
+<pre><code>##   Tukey multiple comparisons of means
+##     95% family-wise confidence level
+## 
+## Fit: aov(formula = price ~ cut, data = diamonds)
+## 
+## $cut
+##                          diff         lwr        upr     p adj
+## Good-Fair          -429.89331  -740.44880  -119.3378 0.0014980
+## Very Good-Fair     -376.99787  -663.86215   -90.1336 0.0031094
+## Premium-Fair        225.49994   -59.26664   510.2665 0.1950425
+## Ideal-Fair         -901.21579 -1180.57139  -621.8602 0.0000000
+## Very Good-Good       52.89544  -130.15186   235.9427 0.9341158
+## Premium-Good        655.39325   475.65120   835.1353 0.0000000
+## Ideal-Good         -471.32248  -642.36268  -300.2823 0.0000000
+## Premium-Very Good   602.49781   467.76249   737.2331 0.0000000
+## Ideal-Very Good    -524.21792  -647.10467  -401.3312 0.0000000
+## Ideal-Premium     -1126.71573 -1244.62267 -1008.8088 0.0000000</code></pre>
+</div>
+<div id="color" class="section level1">
+<h1>Color</h1>
+<pre class="r"><code>ggplot(diamonds, aes(color, price)) + 
+    geom_jitter(color = &#39;#bbbbbb&#39;, alpha = 0.2) +
+    geom_boxplot(aes(fill = color)) + 
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    scale_fill_brewer(name = &#39;Color&#39;, palette = &#39;Blues&#39;) +
+    labs(x = &#39;Color&#39;, y = &#39;Price ($)&#39;) +
+    theme_cowplot()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/color_plot-1.png" width="672" /></p>
+<p>These results are surprising. In general, the more colorless a diamond, the higher quality it is considered. I would have expected to see the median values trending in the opposite direction, where D color stones are highest and J are lowest. I suspect that color alone may not be the driving factor in diamond price; I would guess that some other factors (namely, caret and cut) are more highly prioritized, so perhaps people are willing to compromise on color if it means that they can get a larger stone with a better cut.</p>
+</div>
+<div id="clarity" class="section level1">
+<h1>Clarity</h1>
+<pre class="r"><code>ggplot(diamonds, aes(clarity, price)) + 
+    geom_jitter(color = &#39;#bbbbbb&#39;, alpha = 0.2) +
+    geom_boxplot(aes(fill = clarity)) + 
+    scale_y_continuous(breaks = seq(0, 20000, by = 2000)) +
+    scale_fill_brewer(name = &#39;Clarity&#39;, palette = &#39;Blues&#39;) +
+    labs(x = &#39;Clarity&#39;, y = &#39;Price ($)&#39;) +
+    theme_cowplot()</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/clarity_plot-1.png" width="672" /></p>
+<pre class="r"><code>boxplot(price~clarity, data = diamonds)</code></pre>
+<p><img src="{{< blogdown/postref >}}index_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>Again, these results are contrary to what we would expect. All else being equal, we would expect a stone that is internally flawless (IF) to be sold for much more than one that contains visible flaws (I1 or SI2). However, as with color, perhaps this is something that buyers are willing to compromise on for the sake of other factors (i.e. carat and cut).</p>
+</div>
